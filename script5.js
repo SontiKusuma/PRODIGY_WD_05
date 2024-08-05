@@ -1,72 +1,43 @@
-const container = document.querySelector('.continer');
-const search = document.querySelector('.search-box button');
-const weatherBox = document.querySelector('.weather-box');
-const weatherDetails = document.querySelector('.weather-details');
-const error404 = document.querySelector('.not-found');
+const apikey = "f19442af8480d0bb5d491a99bacface3";
 
+const weatherDataE1 = document.getElementById("weather-data");
 
-search.addEventListener('click', () => {
-    const APIKey= 'f0b2e87acd6ce09e4b0da9b906a6afd5';
-    const city=document.querySelector('search-box input').ariaValueMax;
+const cityInputE1 = document.getElementById("city-input");
 
-    if(city == '')
-        return;
-    fetch('https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${APIKey}')
-    .then(response => response.json()).then(json => {
+const formE1 = document.querySelector("form");
 
-        if (json.cod == '404') {
-            container.computedStyleMap.height = '400px';
-            weatherBox.classList.remove('active');
-            weatherDetails.classList.remove('active');
-            error404.classList.add('active');
-            return;
-        }
-
-        
-
-        const image = document.querySelector('.weather-box img');
-        const temperature = document.querySelector('.weather-box .temperature');
-        const description = document.querySelector('.weather-box .description');
-        const humidity = document.querySelector('.weather-details .humidity span');
-        const wind = document.querySelector('.weather-details .wind span');
-
-        switch(json.weather[0].main) {
-            case 'Clear':
-                image.src = 'clear.png';
-                break;
-
-            case 'Rain':
-                image.src = 'rain.png';
-                break;
-
-            case 'Snow':
-                image.src = 'snow.png';
-                break;
-
-            case 'Clouds':
-                image.src = 'cloud.png';
-                break;
-
-            case 'Mist':
-                image.src = 'mist.png';
-                break;
-            
-            case 'Haze':
-                image.src = 'mist.png';
-                break;
-
-            default:
-                image.src = 'cloud.png';
-        }
-
-        temperature.innerHTML = `${parseInt(json.main.temp)}<span><sup>o</sup>C</span>`;
-        description.innerHTML = `${json.weather[0].description}`;
-        humidity.innerHTML = `${json.main.humidity}%`;
-        wind.innerHTML = `${parseInt(json.wind.speed)}Km/h`;
-
-    });
-
+formE1.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const cityValue = cityInputE1.value;
+    getWeatherData(cityValue);
 });
 
+async function getWeatherData(cityValue) {
+    try {
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityValue}&appid=${apikey}&units=metric`);
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
 
+        const data = await response.json();
+        const temperature = Math.round(data.main.temp);
+        const description = data.weather[0].description;
+        const icon = data.weather[0].icon;
+        const details = [
+            `Feels like: ${Math.round(data.main.feels_like)}`,
+            `Humidity: ${data.main.humidity}%`,
+            `Wind speed: ${data.wind.speed} m/s`,
+        ];
 
+        weatherDataE1.querySelector(".icon").innerHTML = `<img src="http://openweathermap.org/img/wn/${icon}.png" alt="weather icon">`;
+        weatherDataE1.querySelector(".temperature").textContent = `${temperature}°C`;
+        weatherDataE1.querySelector(".description").textContent = description;
+        weatherDataE1.querySelector(".details").innerHTML = details.map((detail) => `<div>${detail}</div>`).join("");
+
+    } catch (error) {
+        weatherDataE1.querySelector(".icon").innerHTML = "";
+        weatherDataE1.querySelector(".temperature").textContent = "";
+        weatherDataE1.querySelector(".description").textContent = "An error happened. Please try again later.";
+        weatherDataE1.querySelector(".details").innerHTML = "";
+    }
+}
